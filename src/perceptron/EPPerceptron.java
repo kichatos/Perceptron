@@ -11,20 +11,20 @@ public class EPPerceptron extends Perceptron {
         super(inputVectorSize, bias);
     }
 
-    public EPPerceptron(List<Double> w, double bias) {
-        super(w, bias);
+    public EPPerceptron(List<Double> weights, double bias) {
+        super(weights, bias);
     }
 
     @Override
     protected void correctWeights(TrainingExample<List<Double>, Boolean> example, Boolean actualResult) {
         if (example.getResult() != actualResult) {
-            double c = Math.abs(Vectors.multiply(w, example.getInput())
+            double c = Math.abs(Vectors.multiply(weights, example.getInput())
                     / Vectors.multiply(example.getInput(), example.getInput())) + EPS;
             if (example.getResult() == false) {
                 c = -c;
             }
 
-            Vectors.increaseBy(w, Vectors.multiply(example.getInput(), c));
+            Vectors.increaseBy(weights, Vectors.multiply(example.getInput(), c));
         }
     }
 }

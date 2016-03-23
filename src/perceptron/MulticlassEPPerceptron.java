@@ -11,8 +11,8 @@ public class MulticlassEPPerceptron<E extends Enum<E>> extends MulticlassPercept
         this(Perceptrons.randomWeights(enumType.getEnumConstants().length, inputVectorSize), enumType);
     }
 
-    public MulticlassEPPerceptron(List<List<Double>> w, Class<E> enumType) {
-        super(w, enumType);
+    public MulticlassEPPerceptron(List<List<Double>> weights, Class<E> enumType) {
+        super(weights, enumType);
     }
 
     @Override
@@ -20,11 +20,11 @@ public class MulticlassEPPerceptron<E extends Enum<E>> extends MulticlassPercept
         if (example.getResult() != actualResult) {
             int expectedClass = classes.get(example.getResult());
             int actualClass = classes.get(actualResult);
-            double c = Vectors.multiply(Vectors.subtract(w.get(actualClass), w.get(expectedClass)), example.getInput())
+            double c = Vectors.multiply(Vectors.subtract(weights.get(actualClass), weights.get(expectedClass)), example.getInput())
                     / Vectors.multiply(example.getInput(), example.getInput()) + EPS;
 
-            Vectors.increaseBy(w.get(expectedClass), Vectors.multiply(example.getInput(), c));
-            Vectors.decreaseBy(w.get(actualClass), Vectors.multiply(example.getInput(), c));
+            Vectors.increaseBy(weights.get(expectedClass), Vectors.multiply(example.getInput(), c));
+            Vectors.decreaseBy(weights.get(actualClass), Vectors.multiply(example.getInput(), c));
         }
     }
 }

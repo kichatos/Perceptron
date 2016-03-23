@@ -5,29 +5,50 @@ import classifier.TrainingExample;
 
 import java.util.*;
 
-public abstract class MulticlassPerceptron<E extends Enum<E>>
-        implements LearningClassifier<List<Double>, E> {
-    protected final int size;
+public abstract class MulticlassPerceptron<E extends Enum<E>> implements LearningClassifier<List<Double>, E> {
+    protected final int inputVectorSize;
     protected final int classCount;
     protected final E[] values;
     protected final EnumMap<E, Integer> classes;
-    protected List<List<Double>> w;
+    protected List<List<Double>> weights;
 
     protected MulticlassPerceptron(int inputVectorSize, Class<E> enumType) {
         this(Perceptrons.randomWeights(enumType.getEnumConstants().length, inputVectorSize), enumType);
     }
 
-    protected MulticlassPerceptron(List<List<Double>> w, Class<E> enumType) {
+    protected MulticlassPerceptron(List<List<Double>> weights, Class<E> enumType) {
         this.values = enumType.getEnumConstants();
         this.classCount = values.length;
-        this.checkWeights(w);
+        this.checkWeights(weights);
         this.classes = new EnumMap<>(enumType);
         this.initClasses();
-        this.size = w.get(0).size();
-        this.w = new ArrayList<>(classCount);
-        for (List<Double> l : w) {
-            this.w.add(new ArrayList<>(l));
+        this.inputVectorSize = weights.get(0).size();
+        this.weights = new ArrayList<>(classCount);
+        for (List<Double> l : weights) {
+            this.weights.add(new ArrayList<>(l));
         }
+    }
+
+    public int getInputVectorSize() {
+        return inputVectorSize;
+    }
+
+    public int getClassCount() {
+        return classCount;
+    }
+
+    public List<List<Double>> getWeights() {
+        List<List<Double>> res = new ArrayList<>(weights.size());
+
+        for (List<Double> list : weights) {
+            res.add(new ArrayList<>(list));
+        }
+
+        return res;
+    }
+
+    public List<Double> getWeights(E outputClass) {
+        return new ArrayList<>(weights.get(classes.get(outputClass)));
     }
 
     private void checkWeights(List<List<Double>> w) {
@@ -96,15 +117,15 @@ public abstract class MulticlassPerceptron<E extends Enum<E>>
 
     @Override
     public final E classify(List<Double> input) {
-        if (input.size() != size) {
+        if (input.size() != inputVectorSize) {
             throw new IllegalArgumentException("Can't classify a wrong-sized input vector.");
         }
 
         int argmax = 0;
-        double max = Vectors.multiply(w.get(argmax), input);
+        double max = Vectors.multiply(weights.get(argmax), input);
 
         for (int i = 1; i < classCount; ++i) {
-            double tmp = Vectors.multiply(w.get(i), input);
+            double tmp = Vectors.multiply(weights.get(i), input);
 
             if (tmp > max) {
                 argmax = i;

@@ -8,23 +8,35 @@ import java.util.Collections;
 import java.util.List;
 
 public abstract class Perceptron implements LearningClassifier<List<Double>, Boolean> {
-    protected final int size;
+    protected final int inputVectorSize;
     protected final Double bias;
 
-    protected ArrayList<Double> w;
+    protected List<Double> weights;
 
     protected Perceptron(int inputVectorSize, Double bias) {
         this(Perceptrons.randomWeights(inputVectorSize), bias);
     }
 
-    protected Perceptron(List<Double> w, Double bias) {
-        if (w.size() == 0) {
+    protected Perceptron(List<Double> weights, Double bias) {
+        if (weights.size() == 0) {
             throw new IllegalArgumentException("Can't create a perceptron with empty input.");
         }
 
-        this.size = w.size();
-        this.w = new ArrayList<>(w);
+        this.inputVectorSize = weights.size();
+        this.weights = new ArrayList<>(weights);
         this.bias = bias;
+    }
+
+    public int getInputVectorSize() {
+        return inputVectorSize;
+    }
+
+    public Double getBias() {
+        return new Double(bias);
+    }
+
+    public List<Double> getWeights() {
+        return new ArrayList<>(weights);
     }
 
     protected abstract void correctWeights(TrainingExample<List<Double>, Boolean> example, Boolean actualResult);
@@ -68,11 +80,11 @@ public abstract class Perceptron implements LearningClassifier<List<Double>, Boo
 
     @Override
     public final Boolean classify(List<Double> input) {
-        if (input.size() != size) {
+        if (input.size() != inputVectorSize) {
             throw new IllegalArgumentException("Can't classify a wrong-sized input vector.");
         }
 
-        return activationFunction(Vectors.multiply(w, input));
+        return activationFunction(Vectors.multiply(weights, input));
     }
 
 
