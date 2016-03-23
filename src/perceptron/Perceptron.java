@@ -8,10 +8,16 @@ import java.util.Collections;
 import java.util.List;
 
 public abstract class Perceptron implements LearningClassifier<List<Double>, Boolean> {
+    public final static double DEFAULT_BIAS = 0.0;
+
     protected final int inputVectorSize;
     protected final Double bias;
 
     protected List<Double> weights;
+
+    protected Perceptron(int inputVectorSize) {
+        this(inputVectorSize, DEFAULT_BIAS);
+    }
 
     protected Perceptron(int inputVectorSize, Double bias) {
         this(Perceptrons.randomWeights(inputVectorSize), bias);

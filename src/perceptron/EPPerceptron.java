@@ -7,6 +7,10 @@ import java.util.List;
 public class EPPerceptron extends Perceptron {
     private final static double EPS = 1E-6;
 
+    public EPPerceptron(int inputVectorSize) {
+        this(inputVectorSize, DEFAULT_BIAS);
+    }
+
     public EPPerceptron(int inputVectorSize, double bias) {
         super(inputVectorSize, bias);
     }
