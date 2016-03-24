@@ -41,8 +41,22 @@ public abstract class Perceptron implements LearningClassifier<List<Double>, Boo
         return new Double(bias);
     }
 
-    public List<Double> getWeights() {
+    public List<Double> getWeightsVector(int index) {
+        if (index != 0) {
+            throw new IndexOutOfBoundsException();
+        }
+
         return new ArrayList<>(weights);
+    }
+
+    public List<Double> getWeightsVector() {
+        return this.getWeightsVector(0);
+    }
+
+    public List<List<Double>> getWeightsMatrix() {
+        List<List<Double>> weights = new ArrayList<>();
+        weights.add(this.getWeightsVector());
+        return weights;
     }
 
     protected abstract void correctWeights(TrainingExample<List<Double>, Boolean> example, Boolean actualResult);
@@ -52,36 +66,64 @@ public abstract class Perceptron implements LearningClassifier<List<Double>, Boo
     }
 
     @Override
-    public final boolean learn(TrainingExample<List<Double>, Boolean> example) {
+    public final void learn(TrainingExample<List<Double>, Boolean> example) {
         Boolean actualResult = this.classify(example.getInput());
         if (actualResult != example.getResult()) {
             correctWeights(example, actualResult);
-            return true;
         }
-
-        return false;
     }
 
     @Override
-    public final boolean learn(List<TrainingExample<List<Double>, Boolean>> learningSet) {
-        boolean incorrect = false;
-        int errorCount = -1;
-        while (errorCount != 0) {
+    public final double learn(List<TrainingExample<List<Double>, Boolean>> learningSet, double desiredAccuracy) {
+        if (desiredAccuracy > 1) {
+            desiredAccuracy = 1;
+        }
+
+        int errorCount;
+        double accuracy = 0;
+        while (accuracy < desiredAccuracy) {
             Collections.shuffle(learningSet);
             errorCount = 0;
 
             for (TrainingExample<List<Double>, Boolean> example : learningSet) {
-                if (learn(example)) {
+                if (this.classify(example.getInput()) != example.getResult()) {
                     ++errorCount;
                 }
+
+                learn(example);
             }
 
-            if (errorCount != 0) {
-                incorrect = true;
-            }
+            accuracy = 1 - ((double) errorCount) / learningSet.size();
         }
 
-        return incorrect;
+        return accuracy;
+    }
+
+    public final double learn(List<TrainingExample<List<Double>, Boolean>> learningSet, double desiredAccuracy, int maxIterationCount) {
+        if (desiredAccuracy > 1) {
+            desiredAccuracy = 1;
+        }
+
+        int iteration = 0;
+        int errorCount;
+        double accuracy = 0;
+        while (accuracy < desiredAccuracy && iteration < maxIterationCount) {
+            Collections.shuffle(learningSet);
+            errorCount = 0;
+
+            for (TrainingExample<List<Double>, Boolean> example : learningSet) {
+                if (this.classify(example.getInput()) != example.getResult()) {
+                    ++errorCount;
+                }
+
+                learn(example);
+            }
+
+            ++iteration;
+            accuracy = 1 - ((double) errorCount) / learningSet.size();
+        }
+
+        return accuracy;
     }
 
     @Override
