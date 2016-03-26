@@ -1,4 +1,4 @@
-package classifier;
+package learning;
 
 public class TrainingExample<I, R> {
     private I input;

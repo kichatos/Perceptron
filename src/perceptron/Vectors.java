@@ -94,4 +94,14 @@ class Vectors {
 
         return res;
     }
+
+    static boolean isZero(List<Double> x) {
+        for (Double d : x) {
+            if (d != 0.0) {
+                return false;
+            }
+        }
+
+        return true;
+    }
 }

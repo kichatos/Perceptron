@@ -1,18 +1,24 @@
 package perceptron;
 
-import classifier.LearningClassifier;
-import classifier.TrainingExample;
+import learning.LearningClassifier;
+import learning.LearningRule;
+import learning.TrainingExample;
+import java.util.logging.*;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 public abstract class Perceptron implements LearningClassifier<List<Double>, Boolean> {
+    public final static Logger logger = Logger.getLogger(Perceptron.class.getName());
+
+    protected boolean loggingEnabled;
+
     public final static double DEFAULT_BIAS = 0.0;
 
     protected final int inputVectorSize;
-    protected final Double bias;
 
+    protected final Double bias;
     protected List<Double> weights;
 
     protected Perceptron(int inputVectorSize) {
@@ -33,12 +39,28 @@ public abstract class Perceptron implements LearningClassifier<List<Double>, Boo
         this.bias = bias;
     }
 
+    public boolean isLoggingEnabled() {
+        return loggingEnabled;
+    }
+
+    public void setLoggingEnabled(boolean loggingEnabled) {
+        this.loggingEnabled = loggingEnabled;
+    }
+
+    public void enableLogging() {
+        setLoggingEnabled(true);
+    }
+
+    public void disableLogging() {
+        setLoggingEnabled(false);
+    }
+
     public int getInputVectorSize() {
         return inputVectorSize;
     }
 
     public Double getBias() {
-        return new Double(bias);
+        return bias;
     }
 
     public List<Double> getWeightsVector(int index) {
@@ -51,6 +73,22 @@ public abstract class Perceptron implements LearningClassifier<List<Double>, Boo
 
     public List<Double> getWeightsVector() {
         return this.getWeightsVector(0);
+    }
+
+    public void setWeightsVector(List<Double> weightsVector) {
+        this.setWeightsVector(0, weightsVector);
+    }
+
+    public void setWeightsVector(int index, List<Double> weightsVector) {
+        if (index != 0) {
+            throw new IndexOutOfBoundsException();
+        }
+
+        if (this.inputVectorSize != weightsVector.size()) {
+            throw new IllegalArgumentException("New weights vector has to be the same size.");
+        }
+
+        this.weights = new ArrayList<>(weightsVector);
     }
 
     public List<List<Double>> getWeightsMatrix() {
@@ -71,59 +109,6 @@ public abstract class Perceptron implements LearningClassifier<List<Double>, Boo
         if (actualResult != example.getResult()) {
             correctWeights(example, actualResult);
         }
-    }
-
-    @Override
-    public final double learn(List<TrainingExample<List<Double>, Boolean>> learningSet, double desiredAccuracy) {
-        if (desiredAccuracy > 1) {
-            desiredAccuracy = 1;
-        }
-
-        int errorCount;
-        double accuracy = 0;
-        while (accuracy < desiredAccuracy) {
-            Collections.shuffle(learningSet);
-            errorCount = 0;
-
-            for (TrainingExample<List<Double>, Boolean> example : learningSet) {
-                if (this.classify(example.getInput()) != example.getResult()) {
-                    ++errorCount;
-                }
-
-                learn(example);
-            }
-
-            accuracy = 1 - ((double) errorCount) / learningSet.size();
-        }
-
-        return accuracy;
-    }
-
-    public final double learn(List<TrainingExample<List<Double>, Boolean>> learningSet, double desiredAccuracy, int maxIterationCount) {
-        if (desiredAccuracy > 1) {
-            desiredAccuracy = 1;
-        }
-
-        int iteration = 0;
-        int errorCount;
-        double accuracy = 0;
-        while (accuracy < desiredAccuracy && iteration < maxIterationCount) {
-            Collections.shuffle(learningSet);
-            errorCount = 0;
-
-            for (TrainingExample<List<Double>, Boolean> example : learningSet) {
-                if (this.classify(example.getInput()) != example.getResult()) {
-                    ++errorCount;
-                }
-
-                learn(example);
-            }
-
-            ++iteration;
-            accuracy = 1 - ((double) errorCount) / learningSet.size();
-        }
-
-        return accuracy;
     }
 
     @Override

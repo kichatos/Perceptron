@@ -1,34 +1,46 @@
 package perceptron;
 
-import classifier.TrainingExample;
+import learning.TrainingExample;
 
 import java.util.List;
 
-public class EPPerceptron extends Perceptron {
+public class RPPerceptron extends Perceptron {
     private final static double EPS = 1E-6;
 
-    public EPPerceptron(int inputVectorSize) {
+    public RPPerceptron(int inputVectorSize) {
         this(inputVectorSize, DEFAULT_BIAS);
     }
 
-    public EPPerceptron(int inputVectorSize, double bias) {
+    public RPPerceptron(int inputVectorSize, double bias) {
         super(inputVectorSize, bias);
     }
 
-    public EPPerceptron(List<Double> weights, double bias) {
+    public RPPerceptron(List<Double> weights, double bias) {
         super(weights, bias);
     }
 
     @Override
     protected void correctWeights(TrainingExample<List<Double>, Boolean> example, Boolean actualResult) {
-        if (example.getResult() != actualResult) {
+        if (!Vectors.isZero(example.getInput())) {
             double c = Math.abs(Vectors.multiply(weights, example.getInput())
                     / Vectors.multiply(example.getInput(), example.getInput())) + EPS;
+            if (Double.isNaN(c)) {
+                if (loggingEnabled) {
+                    logger.severe("Skipped weight correction for NaN correction constant.");
+                }
+                return;
+            }
+
             if (example.getResult() == false) {
                 c = -c;
             }
 
             Vectors.increaseBy(weights, Vectors.multiply(example.getInput(), c));
+        }
+        else {
+            if (loggingEnabled) {
+                logger.info("Skipped weight correction for a zero input");
+            }
         }
     }
 }
