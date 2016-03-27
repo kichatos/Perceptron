@@ -1,14 +1,13 @@
 package perceptron;
 
 import classifier.Classifiers;
-import learning.LearningClassifier;
-import learning.Trainer;
+import learning.IterativeTrainer;
 import learning.TrainingExample;
 
 import java.util.Collections;
 import java.util.List;
 
-public class PerceptronTrainer extends Trainer<List<Double>, Boolean> {
+public class PerceptronTrainer extends IterativeTrainer<List<Double>, Boolean, Perceptron> {
     protected String generateTrainingFinishedMessage(int iteration, double prevAccuracy, double currentAccuracy,
                                                      int bestIteration, double bestAccuracy) {
         StringBuilder res = new StringBuilder();
@@ -18,19 +17,13 @@ public class PerceptronTrainer extends Trainer<List<Double>, Boolean> {
     }
 
     @Override
-    public void train(LearningClassifier<List<Double>, Boolean> learningClassifier) {
-        if (!(learningClassifier instanceof Perceptron)) {
-            throw new IllegalArgumentException("Can't train a classifier different from a perceptron.");
-        }
-
-        Perceptron p = (Perceptron) learningClassifier;
-
+    public void train(Perceptron learningClassifier) {
         int iteration = 0;
         int bestIteration = 0;
         double prevAccuracy = Classifiers.getAccuracy(learningClassifier, learningSet);
         double currentAccuracy = prevAccuracy;
         double bestAccuracy = prevAccuracy;
-        List<Double> bestWeights = p.getWeightsVector();
+        List<Double> bestWeights = learningClassifier.getWeightsVector();
 
         while (!learningRule.shouldStop(iteration, prevAccuracy, currentAccuracy)) {
             ++iteration;
@@ -43,7 +36,7 @@ public class PerceptronTrainer extends Trainer<List<Double>, Boolean> {
             currentAccuracy = Classifiers.getAccuracy(learningClassifier, learningSet);
             if (currentAccuracy > bestAccuracy) {
                 bestAccuracy = currentAccuracy;
-                bestWeights = p.getWeightsVector();
+                bestWeights = learningClassifier.getWeightsVector();
                 bestIteration = iteration;
             }
 
@@ -57,6 +50,6 @@ public class PerceptronTrainer extends Trainer<List<Double>, Boolean> {
                     bestIteration, bestAccuracy));
         }
 
-        p.setWeightsVector(bestWeights);
+        learningClassifier.setWeightsVector(bestWeights);
     }
 }
