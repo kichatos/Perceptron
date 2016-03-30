@@ -19,6 +19,10 @@ public class RPPerceptron extends Perceptron {
         super(weights, bias);
     }
 
+    public void setBiasCorrectionEnabled(boolean biasCorrectionEnabled) {
+        this.biasCorrectionEnabled = biasCorrectionEnabled;
+    }
+
     @Override
     protected void correctWeights(TrainingExample<List<Double>, Boolean> example, Boolean actualResult) {
         if (!Vectors.isZero(example.getInput())) {
@@ -33,6 +37,14 @@ public class RPPerceptron extends Perceptron {
 
             if (example.getResult() == false) {
                 c = -c;
+                if (biasCorrectionEnabled) {
+                    ++bias;
+                }
+            }
+            else {
+                if (biasCorrectionEnabled) {
+                    --bias;
+                }
             }
 
             Vectors.increaseBy(weights, Vectors.multiply(example.getInput(), c));

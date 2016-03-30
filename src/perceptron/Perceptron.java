@@ -1,12 +1,10 @@
 package perceptron;
 
 import learning.LearningClassifier;
-import learning.LearningRule;
 import learning.TrainingExample;
 import java.util.logging.*;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 public abstract class Perceptron implements LearningClassifier<List<Double>, Boolean> {
@@ -14,11 +12,13 @@ public abstract class Perceptron implements LearningClassifier<List<Double>, Boo
 
     protected boolean loggingEnabled;
 
+    protected boolean biasCorrectionEnabled;
+
     public final static double DEFAULT_BIAS = 0.0;
 
     protected final int inputVectorSize;
 
-    protected final Double bias;
+    protected Double bias;
     protected List<Double> weights;
 
     protected Perceptron(int inputVectorSize) {
@@ -63,12 +63,28 @@ public abstract class Perceptron implements LearningClassifier<List<Double>, Boo
         return bias;
     }
 
+    public void setBias(Double bias) {
+        this.bias = bias;
+    }
+
+    public void enableBiasCorrection() {
+        this.biasCorrectionEnabled = true;
+    }
+
+    public void disableBiasCorrection() {
+        this.biasCorrectionEnabled = false;
+    }
+
+    public boolean isBiasCorrectionEnabled() {
+        return biasCorrectionEnabled;
+    }
+
     public List<Double> getWeightsVector(int index) {
         if (index != 0) {
             throw new IndexOutOfBoundsException();
         }
 
-        return new ArrayList<>(weights);
+        return weights;
     }
 
     public List<Double> getWeightsVector() {
