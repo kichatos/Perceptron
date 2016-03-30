@@ -77,39 +77,36 @@ public class IterativeTrainer<I, R, C extends LearningClassifier<I, R>> implemen
         this.learningSet = learningSet;
     }
 
-    protected String generateTrainingFinishedMessage(int iteration, double prevAccuracy, double currentAccuracy) {
+    protected String generateTrainingFinishedMessage(TrainingIteration trainingIteration) {
         StringBuilder res = new StringBuilder();
         res.append("Finished training.\n");
-        res.append("Reason: ").append(learningRule.getStopReason(iteration, prevAccuracy, currentAccuracy)).append('\n');
-        res.append("Iteration count: ").append(iteration);
+        res.append("Reason: ").append(learningRule.getStopReason(trainingIteration)).append('\n');
+        res.append("Iteration count: ").append(trainingIteration.getIterationNumber());
         return res.toString();
     }
 
-    protected String generateIterationMessage(int iteration, double currentAccuracy) {
-        return "Iteration #" + iteration + ". Accuracy: " + currentAccuracy;
+    protected String generateIterationMessage(TrainingIteration trainingIteration) {
+        return "Iteration #" + trainingIteration.getIterationNumber()
+                + ". Accuracy: " + trainingIteration.getCurrentAccuracy();
     }
 
     public void train(C learningClassifier) {
-        int iteration = 0;
-        double prevAccuracy = 0;
-        double currentAccuracy = 0;
-        while (!learningRule.shouldStop(iteration, prevAccuracy, currentAccuracy)) {
-            ++iteration;
-            prevAccuracy = currentAccuracy;
+        TrainingIteration trainingIteration = new TrainingIteration();
+        while (!learningRule.shouldStop(trainingIteration)) {
             Collections.shuffle(learningSet);
             for (TrainingExample<I, R> trainingExample : learningSet) {
                 learningClassifier.learn(trainingExample);
             }
 
-            currentAccuracy = Classifiers.getAccuracy(learningClassifier, learningSet);
+            trainingIteration.advance(Classifiers.getAccuracy(learningClassifier, learningSet));
 
-            if (loggingEnabled && iteration % loggingFrequency == 0) {
-                logger.info(this.generateIterationMessage(iteration, currentAccuracy));
+            if (loggingEnabled && trainingIteration.getIterationNumber() % loggingFrequency == 0) {
+                logger.info(this.generateIterationMessage(trainingIteration));
             }
         }
 
         if (loggingEnabled) {
-            logger.info(this.generateTrainingFinishedMessage(iteration, prevAccuracy, currentAccuracy));
+            logger.info(this.generateTrainingFinishedMessage(trainingIteration));
         }
     }
 }

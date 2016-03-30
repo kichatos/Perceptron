@@ -6,6 +6,7 @@ public class LearningRule {
         ACCURACY_STABILIZED,
         DESIRED_ACCURACY_REACHED,
         ACCURACY_DECREASED,
+        DEVIATION_FROM_OPTIMUM_LIMIT_REACHED,
         NO_REASON;
 
         @Override
@@ -15,6 +16,7 @@ public class LearningRule {
                 case ACCURACY_STABILIZED: return "Accuracy stabilized";
                 case DESIRED_ACCURACY_REACHED: return "Reached desired accuracy";
                 case ACCURACY_DECREASED: return "Accuracy decreased";
+                case DEVIATION_FROM_OPTIMUM_LIMIT_REACHED: return "Reached accuracy deviation from stochastic optimum limit.";
                 case NO_REASON: return "No reason";
                 default: return "Unknown reason";
             }
@@ -29,29 +31,37 @@ public class LearningRule {
 
     private double minAccuracy;
 
+    private boolean maxDeviationFromOptimumEnabled;
+    private double maxDeviationFromOptimum;
+
     private boolean stopOnAccuracyDecreaseEnabled;
 
     public LearningRule() {
         minAccuracy = 1.0;
     }
 
-    public boolean shouldStop(int iterationNumber, double prevAccuracy, double currentAccuracy) {
-        return this.getStopReason(iterationNumber, prevAccuracy, currentAccuracy) != StopReason.NO_REASON;
+    public boolean shouldStop(TrainingIteration trainingIteration) {
+        return this.getStopReason(trainingIteration) != StopReason.NO_REASON;
     }
 
-    public StopReason getStopReason(int iterationNumber, double prevAccuracy, double currentAccuracy) {
-        double accuracyChange = currentAccuracy - prevAccuracy;
-        if (iterationLimitEnabled && iterationNumber == iterationLimit) {
+    public StopReason getStopReason(TrainingIteration trainingIteration) {
+        if (iterationLimitEnabled && trainingIteration.getIterationNumber() == iterationLimit) {
             return StopReason.ITERATION_LIMIT_REACHED;
         }
-        else if (minAccuracyChangeEnabled && iterationNumber != 0 && Math.abs(accuracyChange) < minAccuracyChange) {
+        else if (minAccuracyChangeEnabled && trainingIteration.trainingStarted() &&
+                Math.abs(trainingIteration.getAccuracyChange()) < minAccuracyChange) {
             return StopReason.ACCURACY_STABILIZED;
         }
-        else if (currentAccuracy >= minAccuracy) {
+        else if (trainingIteration.getCurrentAccuracy() >= minAccuracy) {
             return StopReason.DESIRED_ACCURACY_REACHED;
         }
-        else if (stopOnAccuracyDecreaseEnabled && iterationNumber != 0 &&accuracyChange < 0) {
+        else if (stopOnAccuracyDecreaseEnabled && trainingIteration.trainingStarted() &&
+                trainingIteration.getAccuracyChange() < 0) {
             return StopReason.ACCURACY_DECREASED;
+        }
+        else if (maxDeviationFromOptimumEnabled && trainingIteration.trainingStarted() &&
+                trainingIteration.getDeviationFromBest() > maxDeviationFromOptimum) {
+            return StopReason.DEVIATION_FROM_OPTIMUM_LIMIT_REACHED;
         }
         else {
             return StopReason.NO_REASON;
@@ -89,17 +99,23 @@ public class LearningRule {
         return this;
     }
 
+    public LearningRule enableDeviationFromOptimumLimit(double maxDeviationFromOptimum) {
+        this.maxDeviationFromOptimumEnabled = true;
+        this.maxDeviationFromOptimum = maxDeviationFromOptimum;
+        return this;
+    }
+
+    public LearningRule disableDeviationFromOptimumLimit() {
+        this.maxDeviationFromOptimumEnabled = false;
+        return this;
+    }
+
     public LearningRule enableStopOnAccuracyDecrease() {
         this.stopOnAccuracyDecreaseEnabled = true;
         return this;
     }
 
-    public LearningRule stopOnAccuracyDecrease() {
-        this.stopOnAccuracyDecreaseEnabled = true;
-        return this;
-    }
-
-    public LearningRule continueOnAccuracyDecrease() {
+    public LearningRule disableStopOnAccuracyDecrease() {
         this.stopOnAccuracyDecreaseEnabled = false;
         return this;
     }

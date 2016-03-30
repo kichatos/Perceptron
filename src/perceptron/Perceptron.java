@@ -12,8 +12,6 @@ public abstract class Perceptron implements LearningClassifier<List<Double>, Boo
 
     protected boolean loggingEnabled;
 
-    protected boolean biasCorrectionEnabled;
-
     public final static double DEFAULT_BIAS = 0.0;
 
     protected final int inputVectorSize;
@@ -27,6 +25,10 @@ public abstract class Perceptron implements LearningClassifier<List<Double>, Boo
 
     protected Perceptron(int inputVectorSize, Double bias) {
         this(Perceptrons.randomWeights(inputVectorSize), bias);
+    }
+
+    protected Perceptron(List<Double> weights) {
+        this(weights, DEFAULT_BIAS);
     }
 
     protected Perceptron(List<Double> weights, Double bias) {
@@ -65,18 +67,6 @@ public abstract class Perceptron implements LearningClassifier<List<Double>, Boo
 
     public void setBias(Double bias) {
         this.bias = bias;
-    }
-
-    public void enableBiasCorrection() {
-        this.biasCorrectionEnabled = true;
-    }
-
-    public void disableBiasCorrection() {
-        this.biasCorrectionEnabled = false;
-    }
-
-    public boolean isBiasCorrectionEnabled() {
-        return biasCorrectionEnabled;
     }
 
     public List<Double> getWeightsVector(int index) {

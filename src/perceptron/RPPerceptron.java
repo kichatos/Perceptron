@@ -12,40 +12,29 @@ public class RPPerceptron extends Perceptron {
     }
 
     public RPPerceptron(int inputVectorSize, double bias) {
-        super(inputVectorSize, bias);
+        this(Perceptrons.randomWeights(inputVectorSize), bias);
+    }
+
+    public RPPerceptron(List<Double> weights) {
+        this(weights, DEFAULT_BIAS);
     }
 
     public RPPerceptron(List<Double> weights, double bias) {
         super(weights, bias);
     }
 
-    public void setBiasCorrectionEnabled(boolean biasCorrectionEnabled) {
-        this.biasCorrectionEnabled = biasCorrectionEnabled;
-    }
-
     @Override
     protected void correctWeights(TrainingExample<List<Double>, Boolean> example, Boolean actualResult) {
-        if (!Vectors.isZero(example.getInput())) {
-            double c = Math.abs(Vectors.multiply(weights, example.getInput())
-                    / Vectors.multiply(example.getInput(), example.getInput())) + EPS;
-            if (Double.isNaN(c)) {
-                if (loggingEnabled) {
-                    logger.severe("Skipped weight correction for NaN correction constant.");
-                }
-                return;
-            }
+        double numerator = Vectors.multiply(weights, example.getInput()) + bias * 1.0d;
+        double denominator = Vectors.multiply(example.getInput(), example.getInput()) + 1.0d * 1.0d;
 
-            if (example.getResult() == false) {
-                c = -c;
-            }
+        double c = Math.abs(numerator / denominator) + EPS;
 
-            Vectors.increaseBy(weights, Vectors.multiply(example.getInput(), c));
-            bias = bias + c;
+        if (actualResult == true && example.getResult() == false) {
+            c = -c;
         }
-        else {
-            if (loggingEnabled) {
-                logger.info("Skipped weight correction for a zero input");
-            }
-        }
+
+        Vectors.increaseBy(weights, Vectors.multiply(example.getInput(), c));
+        bias = bias + c;
     }
 }
