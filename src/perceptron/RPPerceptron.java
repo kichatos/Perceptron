@@ -25,7 +25,7 @@ public class RPPerceptron extends Perceptron {
 
     @Override
     protected void correctWeights(TrainingExample<List<Double>, Boolean> example, Boolean actualResult) {
-        double numerator = Vectors.multiply(weights, example.getInput()) + bias * 1.0d;
+        double numerator = Vectors.multiply(weights, example.getInput()) - bias * 1.0d;
         double denominator = Vectors.multiply(example.getInput(), example.getInput()) + 1.0d * 1.0d;
 
         double c = Math.abs(numerator / denominator) + EPS;
