@@ -2,10 +2,10 @@ package perceptron;
 
 import learning.LearningClassifier;
 import learning.TrainingExample;
-import java.util.logging.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Logger;
 
 public abstract class Perceptron implements LearningClassifier<List<Double>, Boolean> {
     public final static Logger logger = Logger.getLogger(Perceptron.class.getName());
@@ -105,8 +105,16 @@ public abstract class Perceptron implements LearningClassifier<List<Double>, Boo
 
     protected abstract void correctWeights(TrainingExample<List<Double>, Boolean> example, Boolean actualResult);
 
-    protected final boolean activationFunction(Double input) {
+    public final boolean activationFunction(Double input) {
         return input >= bias;
+    }
+
+    public final Double getOutput(List<Double> input) {
+        if (input.size() != inputVectorSize) {
+            throw new IllegalArgumentException("Can't classify a wrong-sized input vector.");
+        }
+
+        return Vectors.multiply(weights, input);
     }
 
     @Override
@@ -119,11 +127,7 @@ public abstract class Perceptron implements LearningClassifier<List<Double>, Boo
 
     @Override
     public final Boolean classify(List<Double> input) {
-        if (input.size() != inputVectorSize) {
-            throw new IllegalArgumentException("Can't classify a wrong-sized input vector.");
-        }
-
-        return activationFunction(Vectors.multiply(weights, input));
+        return activationFunction(getOutput(input));
     }
 
 

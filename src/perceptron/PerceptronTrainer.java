@@ -1,15 +1,14 @@
 package perceptron;
 
-import classifier.Classifiers;
 import learning.IterativeTrainer;
 import learning.TrainingExample;
-import learning.TrainingIteration;
+import learning.TrainingStatistics;
 
 import java.util.Collections;
 import java.util.List;
 
 public class PerceptronTrainer extends IterativeTrainer<List<Double>, Boolean, Perceptron> {
-    protected String generateTrainingFinishedMessage(TrainingIteration iteration) {
+    protected String generateTrainingFinishedMessage(TrainingStatistics iteration) {
         StringBuilder res = new StringBuilder();
         res.append(super.generateTrainingFinishedMessage(iteration)).append('\n');
         res.append("Remembered iteration #").append(iteration.getBestIterationNumber());
@@ -19,27 +18,28 @@ public class PerceptronTrainer extends IterativeTrainer<List<Double>, Boolean, P
 
     @Override
     public void train(Perceptron learningClassifier) {
-        TrainingIteration iteration = new TrainingIteration();
+        TrainingStatistics<List<Double>, Boolean> trainingStatistics =
+                new TrainingStatistics<>(learningClassifier, learningSet);
         List<Double> bestWeights = learningClassifier.getWeightsVector();
 
-        while (!learningRule.shouldStop(iteration)) {
+        while (!learningRule.shouldStop(trainingStatistics)) {
             Collections.shuffle(learningSet);
             for (TrainingExample<List<Double>, Boolean> trainingExample : learningSet) {
                 learningClassifier.learn(trainingExample);
             }
 
-            iteration.advance(Classifiers.getAccuracy(learningClassifier, learningSet));
-            if (iteration.isBest()) {
+            trainingStatistics.advance();
+            if (trainingStatistics.isBest()) {
                 bestWeights = learningClassifier.getWeightsVector();
             }
 
-            if (loggingEnabled && iteration.getIterationNumber() % loggingFrequency == 0) {
-                logger.info(this.generateIterationMessage(iteration));
+            if (loggingEnabled && trainingStatistics.getIterationNumber() % loggingFrequency == 0) {
+                logger.info(this.generateIterationMessage(trainingStatistics));
             }
         }
 
         if (loggingEnabled) {
-            logger.info(this.generateTrainingFinishedMessage(iteration));
+            logger.info(this.generateTrainingFinishedMessage(trainingStatistics));
         }
 
         learningClassifier.setWeightsVector(bestWeights);

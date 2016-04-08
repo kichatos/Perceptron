@@ -7,6 +7,7 @@ public class LearningRule {
         DESIRED_ACCURACY_REACHED,
         ACCURACY_DECREASED,
         DEVIATION_FROM_OPTIMUM_LIMIT_REACHED,
+        BEST_REPETITION_LIMIT_REACHED,
         NO_REASON;
 
         @Override
@@ -17,6 +18,7 @@ public class LearningRule {
                 case DESIRED_ACCURACY_REACHED: return "Reached desired accuracy";
                 case ACCURACY_DECREASED: return "Accuracy decreased";
                 case DEVIATION_FROM_OPTIMUM_LIMIT_REACHED: return "Reached accuracy deviation from stochastic optimum limit.";
+                case BEST_REPETITION_LIMIT_REACHED: return "Best result repetition limit reached.";
                 case NO_REASON: return "No reason";
                 default: return "Unknown reason";
             }
@@ -29,6 +31,11 @@ public class LearningRule {
     private boolean minAccuracyChangeEnabled;
     private double minAccuracyChange;
 
+    private boolean bestRepetitionLimitEnabled = true;
+    private int bestRepetitionLimit = 100;
+
+    private int maxAccuracyRepetitions;
+
     private double minAccuracy;
 
     private boolean maxDeviationFromOptimumEnabled;
@@ -40,27 +47,30 @@ public class LearningRule {
         minAccuracy = 1.0;
     }
 
-    public boolean shouldStop(TrainingIteration trainingIteration) {
-        return this.getStopReason(trainingIteration) != StopReason.NO_REASON;
+    public boolean shouldStop(TrainingStatistics trainingStatistics) {
+        return this.getStopReason(trainingStatistics) != StopReason.NO_REASON;
     }
 
-    public StopReason getStopReason(TrainingIteration trainingIteration) {
-        if (iterationLimitEnabled && trainingIteration.getIterationNumber() == iterationLimit) {
+    public StopReason getStopReason(TrainingStatistics trainingStatistics) {
+        if (iterationLimitEnabled && trainingStatistics.getIterationNumber() == iterationLimit) {
             return StopReason.ITERATION_LIMIT_REACHED;
         }
-        else if (minAccuracyChangeEnabled && trainingIteration.trainingStarted() &&
-                Math.abs(trainingIteration.getAccuracyChange()) < minAccuracyChange) {
+        else if (bestRepetitionLimitEnabled && trainingStatistics.bestRepetitionCount >= bestRepetitionLimit) {
+            return StopReason.BEST_REPETITION_LIMIT_REACHED;
+        }
+        else if (minAccuracyChangeEnabled && trainingStatistics.trainingStarted() &&
+                Math.abs(trainingStatistics.getAccuracyChange()) < minAccuracyChange) {
             return StopReason.ACCURACY_STABILIZED;
         }
-        else if (trainingIteration.getCurrentAccuracy() >= minAccuracy) {
+        else if (trainingStatistics.getCurrentAccuracy() >= minAccuracy) {
             return StopReason.DESIRED_ACCURACY_REACHED;
         }
-        else if (stopOnAccuracyDecreaseEnabled && trainingIteration.trainingStarted() &&
-                trainingIteration.getAccuracyChange() < 0) {
+        else if (stopOnAccuracyDecreaseEnabled && trainingStatistics.trainingStarted() &&
+                trainingStatistics.getAccuracyChange() < 0) {
             return StopReason.ACCURACY_DECREASED;
         }
-        else if (maxDeviationFromOptimumEnabled && trainingIteration.trainingStarted() &&
-                trainingIteration.getDeviationFromBest() > maxDeviationFromOptimum) {
+        else if (maxDeviationFromOptimumEnabled && trainingStatistics.trainingStarted() &&
+                trainingStatistics.getDeviationFromBest() > maxDeviationFromOptimum) {
             return StopReason.DEVIATION_FROM_OPTIMUM_LIMIT_REACHED;
         }
         else {
@@ -117,6 +127,17 @@ public class LearningRule {
 
     public LearningRule disableStopOnAccuracyDecrease() {
         this.stopOnAccuracyDecreaseEnabled = false;
+        return this;
+    }
+
+    public LearningRule enableBestRepetitionLimit(int bestRepetitionLimit) {
+        this.bestRepetitionLimitEnabled = true;
+        this.bestRepetitionLimit = bestRepetitionLimit;
+        return this;
+    }
+
+    public LearningRule disableBestRepetitionLimit() {
+        this.bestRepetitionLimitEnabled = false;
         return this;
     }
 }

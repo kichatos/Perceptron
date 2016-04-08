@@ -1,29 +1,27 @@
 package learning;
 
-public class TrainingIteration {
+import java.util.List;
+
+public class TrainingStatistics<I, R> {
+    LearningClassifier<I, R> classifier;
+    List<TrainingExample<I, R>> testSet;
+
     protected int iterationNumber;
     protected int bestIterationNumber;
 
+    protected int bestRepetitionCount;
+
     protected double prevAccuracy;
+
     protected double currentAccuracy;
     protected double bestAccuracy;
 
-    public TrainingIteration() {
-
-    }
-
-    public TrainingIteration(TrainingIteration trainingIteration) {
-        this(trainingIteration.iterationNumber, trainingIteration.bestIterationNumber, trainingIteration.prevAccuracy,
-                trainingIteration.currentAccuracy, trainingIteration.bestAccuracy);
-    }
-
-    public TrainingIteration(int iterationNumber, int bestIterationNumber,
-                             double prevAccuracy, double currentAccuracy, double bestAccuracy) {
-        this.iterationNumber = iterationNumber;
-        this.bestIterationNumber = bestIterationNumber;
-        this.prevAccuracy = prevAccuracy;
-        this.currentAccuracy = currentAccuracy;
-        this.bestAccuracy = bestAccuracy;
+    public TrainingStatistics(LearningClassifier<I, R> classifier, List<TrainingExample<I, R>> testSet) {
+        this.classifier = classifier;
+        this.testSet = testSet;
+        this.currentAccuracy = this.classifier.getAccuracy(this.testSet);
+        this.bestAccuracy = this.currentAccuracy;
+        this.bestRepetitionCount = 1;
     }
 
     public boolean trainingStarted() {
@@ -58,18 +56,26 @@ public class TrainingIteration {
         return bestAccuracy - currentAccuracy;
     }
 
+    public int getBestRepetitionCount() {
+        return bestRepetitionCount;
+    }
+
     public boolean isBest() {
         return iterationNumber == bestIterationNumber;
     }
 
-    public void advance(double newAccuracy) {
+    public void advance() {
         ++iterationNumber;
         prevAccuracy = currentAccuracy;
-        currentAccuracy = newAccuracy;
+        currentAccuracy = classifier.getAccuracy(this.testSet);
 
         if (bestAccuracy < currentAccuracy) {
             bestAccuracy = currentAccuracy;
             bestIterationNumber = iterationNumber;
+            bestRepetitionCount = 1;
+        }
+        else if (bestAccuracy == currentAccuracy) {
+            ++bestRepetitionCount;
         }
     }
 }
